@@ -56,6 +56,8 @@ def render_schedule(
   """Create a single C source code with all the kernels and the assembled function."""
   c_code = []
   c_code.append('#ifdef __cpplus\nextern "C" {\n#endif')
+  c_code.append("#include <stdlib.h>")
+  c_code.append("#include <stdint.h>")
 
   # Add kernel sources
   for rk in rendered_kernels:
