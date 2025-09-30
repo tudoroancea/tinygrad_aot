@@ -20,7 +20,8 @@ dev = [
 ]
 
 [tool.uv.sources]
-tinygrad = { path = "src/tinygrad"}
+# tinygrad = { path = "src/tinygrad"}
+tinygrad = { git = "https://github.com/tinygrad/tinygrad", rev= "baf3b60cfb28c7ee950414538ae936498ed237f3"}
 
 [tool.ruff]
 line-length = 120

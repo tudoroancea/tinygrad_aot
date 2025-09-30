@@ -92,75 +92,7 @@ wheels = [
 [[package]]
 name = "tinygrad"
 version = "0.11.0"
-source = { directory = "src/tinygrad" }
-
-[package.metadata]
-requires-dist = [
-    { name = "black", marker = "extra == 'docs'" },
-    { name = "blobfile", marker = "extra == 'testing'" },
-    { name = "boto3", marker = "extra == 'testing'" },
-    { name = "bottle", marker = "extra == 'testing'" },
-    { name = "capstone", marker = "extra == 'testing'" },
-    { name = "ggml-python", marker = "extra == 'testing'" },
-    { name = "hypothesis", marker = "extra == 'testing'" },
-    { name = "hypothesis", marker = "extra == 'testing-minimal'" },
-    { name = "hypothesis", marker = "extra == 'testing-unit'" },
-    { name = "influxdb3-python", marker = "extra == 'testing'" },
-    { name = "librosa", marker = "extra == 'testing'" },
-    { name = "markdown-callouts", marker = "extra == 'docs'" },
-    { name = "markdown-exec", extras = ["ansi"], marker = "extra == 'docs'" },
-    { name = "mkdocs", marker = "extra == 'docs'" },
-    { name = "mkdocs-material", marker = "extra == 'docs'" },
-    { name = "mkdocstrings", extras = ["python"], marker = "extra == 'docs'" },
-    { name = "mypy", marker = "extra == 'linting'", specifier = "==1.18.1" },
-    { name = "networkx", marker = "extra == 'testing'" },
-    { name = "nibabel", marker = "extra == 'testing'" },
-    { name = "numba", marker = "extra == 'testing'", specifier = ">=0.55" },
-    { name = "numpy", marker = "extra == 'docs'" },
-    { name = "numpy", marker = "extra == 'linting'" },
-    { name = "numpy", marker = "extra == 'testing'" },
-    { name = "numpy", marker = "extra == 'testing-minimal'" },
-    { name = "numpy", marker = "extra == 'testing-unit'" },
-    { name = "onnx", marker = "extra == 'testing'", specifier = "==1.18.0" },
-    { name = "onnx2torch", marker = "extra == 'testing'" },
-    { name = "onnxruntime", marker = "extra == 'testing'" },
-    { name = "opencv-python", marker = "extra == 'testing'" },
-    { name = "pandas", marker = "extra == 'testing'" },
-    { name = "pillow", marker = "extra == 'testing'" },
-    { name = "pre-commit", marker = "extra == 'linting'" },
-    { name = "pycocotools", marker = "extra == 'testing'" },
-    { name = "pylint", marker = "extra == 'linting'" },
-    { name = "pytest", marker = "extra == 'testing'" },
-    { name = "pytest", marker = "extra == 'testing-minimal'" },
-    { name = "pytest", marker = "extra == 'testing-unit'" },
-    { name = "pytest-timeout", marker = "extra == 'testing'" },
-    { name = "pytest-timeout", marker = "extra == 'testing-minimal'" },
-    { name = "pytest-timeout", marker = "extra == 'testing-unit'" },
-    { name = "pytest-xdist", marker = "extra == 'testing'" },
-    { name = "pytest-xdist", marker = "extra == 'testing-minimal'" },
-    { name = "pytest-xdist", marker = "extra == 'testing-unit'" },
-    { name = "ruff", marker = "extra == 'linting'" },
-    { name = "safetensors", marker = "extra == 'testing'" },
-    { name = "safetensors", marker = "extra == 'testing-unit'" },
-    { name = "sentencepiece", marker = "extra == 'testing'" },
-    { name = "tabulate", marker = "extra == 'testing'" },
-    { name = "tabulate", marker = "extra == 'testing-unit'" },
-    { name = "tiktoken", marker = "extra == 'testing'" },
-    { name = "torch", marker = "extra == 'testing'", specifier = "==2.8.0" },
-    { name = "torch", marker = "extra == 'testing-minimal'", specifier = "==2.8.0" },
-    { name = "torch", marker = "extra == 'testing-unit'", specifier = "==2.8.0" },
-    { name = "tqdm", marker = "extra == 'testing'" },
-    { name = "tqdm", marker = "extra == 'testing-unit'" },
-    { name = "transformers", marker = "extra == 'testing'" },
-    { name = "triton-nightly", marker = "extra == 'triton'", specifier = ">=2.1.0.dev20231014192330" },
-    { name = "typeguard", marker = "extra == 'linting'" },
-    { name = "typing-extensions", marker = "extra == 'linting'" },
-    { name = "unicorn", marker = "extra == 'arm'" },
-    { name = "z3-solver", marker = "extra == 'testing'" },
-    { name = "z3-solver", marker = "extra == 'testing-minimal'" },
-    { name = "z3-solver", marker = "extra == 'testing-unit'" },
-]
-provides-extras = ["arm", "triton", "linting", "testing-minimal", "testing-unit", "testing", "docs"]
+source = { git = "https://github.com/tinygrad/tinygrad?rev=baf3b60cfb28c7ee950414538ae936498ed237f3#baf3b60cfb28c7ee950414538ae936498ed237f3" }
 
 [[package]]
 name = "tinygrad-aot"
@@ -177,7 +109,7 @@ dev = [
 ]
 
 [package.metadata]
-requires-dist = [{ name = "tinygrad", directory = "src/tinygrad" }]
+requires-dist = [{ name = "tinygrad", git = "https://github.com/tinygrad/tinygrad?rev=baf3b60cfb28c7ee950414538ae936498ed237f3" }]
 
 [package.metadata.requires-dev]
 dev = [
