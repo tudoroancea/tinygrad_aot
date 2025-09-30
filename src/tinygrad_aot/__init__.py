@@ -3,12 +3,13 @@ from functools import cached_property
 from itertools import count
 from typing import Callable, cast
 
-from tinygrad import Device, Tensor
 from tinygrad.device import Buffer
 from tinygrad.engine.realize import get_program
 from tinygrad.engine.schedule import ScheduleItem
 from tinygrad.renderer import ProgramSpec
 from tinygrad.renderer.cstyle import CStyleLanguage
+
+from tinygrad import Device, Tensor
 
 __all__ = ["aot"]
 
@@ -55,19 +56,21 @@ def render_schedule(
 ) -> str:
   """Create a single C source code with all the kernels and the assembled function."""
   c_code = []
+  c_code.append('#ifdef __cpplus\nextern "C" {\n#endif')
   c_code.append("#include <stdlib.h>")
   c_code.append("#include <stdint.h>")
 
   # Add kernel sources
   for rk in rendered_kernels:
-    c_code.append(rk.src)
+
+    c_code.append(rk.src.replace("restrict", "__restrict__"))
 
   # declare global function
   base_renderer = cast(CStyleLanguage, Device[bc.inputs[0].device].renderer)
   c_code.append(
     f"void {name}("
     + ", ".join(
-      [f"{base_renderer.render_dtype(buf.dtype)}* restrict {bc.buf_names[buf]}" for buf in bc.outputs + bc.inputs]
+      [f"{base_renderer.render_dtype(buf.dtype)}* __restrict__ {bc.buf_names[buf]}" for buf in bc.outputs + bc.inputs]
     )
     + ") {"
   )
@@ -93,6 +96,8 @@ def render_schedule(
     c_code.append(f"\tfree({tmpnames[tmpbuf]});")
 
   c_code.append("}")
+
+  c_code.append("#ifdef __cpplus\n}\n#endif")
 
   return "\n".join(c_code)
 

@@ -81,17 +81,17 @@ def bicycle_disc(z: Tensor) -> Tensor:
   return _rk4(_bicycle_ocp, z[:4], z[4:], 0.01)
 
 
-def f(x: Tensor) -> Tensor:
+def pol(x: Tensor) -> Tensor:
   return x[0] ** 2 + x[1] ** 3
 
 
-def f2(x: Tensor) -> Tensor:
+def pol2(x: Tensor) -> Tensor:
   return x[:, 0] ** 2 + x[:, 1] ** 3
 
 
-def f3(x: Tensor) -> Tensor:
+def pol3(x: Tensor) -> Tensor:
   a = UOp.range(x.shape[0], 1)
-  return f(x[a]).contiguous(a)
+  return pol(x[a]).contiguous(a)
 
 
 ##################################################################
@@ -108,6 +108,9 @@ args = [
   ("bicycle_cont2_10_6", bicycle_cont2, (10, 6)),
   ("bicycle_disc_6", bicycle_disc, (6,)),
   pytest.param("bicycle_disc_6_10", bicycle_disc, (6, 10), marks=pytest.mark.xfail),
+  ("pol_2", pol, (2,)),
+  ("pol_2_10", pol, (2, 10)),
+  ("pol2_10_2", pol2, (10, 2)),
 ]
 
 
