@@ -109,8 +109,8 @@ args = [
   ("bicycle_disc_6", bicycle_disc, (6,)),
   pytest.param("bicycle_disc_6_10", bicycle_disc, (6, 10), marks=pytest.mark.xfail),
   ("pol_2", pol, (2,)),
-  ("pol_2_10", pol, (2, 10)),
-  ("pol2_10_2", pol2, (10, 2)),
+  ("pol_2_1024", pol, (2, 1024)),
+  ("pol_1024_2", pol2, (1024, 2)),
 ]
 
 
@@ -128,7 +128,7 @@ def test_aot(name: str, fn: Callable[[Tensor], Tensor], inshape: tuple[int, ...]
     file.write(aot_src)
   try:
     subprocess.run(
-      ["clang", f"{prefix}/{name}.c", "-c", "-o", f"{prefix}/{name}.o"],
+      ["clang", f"{prefix}/{name}.c", "-O3", "-mcpu=native", "-S", "-o", f"{prefix}/{name}.s"],
       check=True,
       text=True,
       capture_output=True,
