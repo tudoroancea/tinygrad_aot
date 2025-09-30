@@ -4,9 +4,9 @@ from functools import wraps
 from typing import Callable
 
 import pytest
+from tinygrad.uop.ops import UOp
 
 from tinygrad import Tensor
-from tinygrad.uop.ops import UOp
 from tinygrad_aot import aot
 
 ##################################################################
@@ -35,7 +35,7 @@ linear_sum_grad = grad(linear_sum)
 
 
 def do_square(x: Tensor) -> Tensor:
-  return 0.5 * x.square().sum()
+  return 0.5 * x.square()
 
 
 do_square_grad = grad(do_square)
