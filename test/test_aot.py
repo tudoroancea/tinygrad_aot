@@ -4,6 +4,9 @@ from functools import wraps
 from typing import Callable
 
 import pytest
+from icecream import ic
+from tinygrad import Tensor
+from tinygrad.helpers import prod
 from tinygrad.uop.ops import UOp
 
 from tinygrad_aot import Codegenable, OneOrMore, Shape, aot
@@ -49,7 +52,7 @@ def _bicycle_ocp(x: Tensor, u: Tensor) -> Tensor:
   dy = v * Tensor.sin(theta)
   dtheta = v * Tensor.tan(delta)
   dv = a
-  return Tensor.stack([dx, dy, dtheta, dv], dim=-1)
+  return Tensor.stack(dx, dy, dtheta, dv)
 
 
 def _rk4(fn: Callable[[Tensor], Tensor], x: Tensor, u: Tensor, dt: float) -> Tensor:
@@ -93,6 +96,19 @@ def pol3(x: Tensor) -> Tensor:
   return pol(x[a]).contiguous(a)
 
 
+def eq_constraints(Z: Tensor) -> Tensor:
+  """
+  Z = [x0, u0, ..., x_{N-1}, u_{N-1}, x_N]
+  eq_constraints = [x0, x1 - f(x0, u0), ..., xN - f(xN-1, uN-1)]
+  """
+  nx, nu = 4, 2
+  N = Z.shape[0] // (nx + nu)
+  # NOTE: contiguous below makes the same state be contiguous in memory and should help with vectorization
+  staging = Z.pad_to((nx + nu) * (N + 1)).reshape((N + 1, nx + nu)).transpose().contiguous()  # shape (nx + nu, N + 1)
+  interstage = staging[:nx, 1:] - _rk4(_bicycle_ocp, staging[:nx, :N], staging[nx:, :N], dt=1.0)  # shape (nx, N)
+  return Tensor.cat(Z[:nx], interstage.transpose().flatten().contiguous())  # is this contiguous necessary?
+
+
 ##################################################################
 # Test AOT
 ##################################################################
@@ -101,23 +117,28 @@ args = [
   ("do_square_8", do_square, (8,)),
   ("do_square_1024", do_square, (1024,)),
   ("linear_sum", linear_sum, (1024,)),
-  pytest.param("linear_sum_grad", linear_sum_grad, (1024,), marks=pytest.mark.xfail),
+  pytest.param("linear_sum_grad", linear_sum_grad, (1024,), marks=pytest.mark.skip),
   ("bicycle_cont_two_params", _bicycle_ocp, ((4,), (2,))),
   ("bicycle_cont_6", bicycle_cont, (6,)),
   ("bicycle_cont_6_10", bicycle_cont, (6, 10)),
   ("bicycle_cont2_10_6", bicycle_cont2, (10, 6)),
   ("bicycle_disc_6", bicycle_disc, (6,)),
-  pytest.param("bicycle_disc_6_10", bicycle_disc, (6, 10), marks=pytest.mark.xfail),
+  ("bicycle_disc_6_10", bicycle_disc, (6, 10)),
   ("pol_2", pol, (2,)),
   ("pol_2_1024", pol, (2, 1024)),
   ("pol_1024_2", pol2, (1024, 2)),
+  ("eq_constraints_10", eq_constraints, ((4 + 2) * 10 + 4,)),
 ]
 
 
 @pytest.mark.parametrize("name, fn, inshape", args)
 def test_run(name: str, fn: Codegenable, inshape: OneOrMore[Shape]):
-  ins = (Tensor.ones(inshape),) if isinstance(inshape[0], int) else tuple(Tensor.ones(shape) for shape in inshape)
-  fn(*ins).realize()
+  ins = (
+    (Tensor.arange(prod(inshape)).reshape(inshape),)
+    if isinstance(inshape[0], int)
+    else tuple(Tensor.arange(prod(shape)).reshape(shape) for shape in inshape)
+  )
+  print(fn(*ins).numpy())
 
 
 @pytest.mark.parametrize("name, fn, inshape", args)
