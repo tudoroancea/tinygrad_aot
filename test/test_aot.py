@@ -6,8 +6,7 @@ from typing import Callable
 import pytest
 from tinygrad.uop.ops import UOp
 
-from tinygrad import Tensor
-from tinygrad_aot import aot
+from tinygrad_aot import Codegenable, OneOrMore, Shape, aot
 
 ##################################################################
 # Some functions to test
@@ -103,6 +102,7 @@ args = [
   ("do_square_1024", do_square, (1024,)),
   ("linear_sum", linear_sum, (1024,)),
   pytest.param("linear_sum_grad", linear_sum_grad, (1024,), marks=pytest.mark.xfail),
+  ("bicycle_cont_two_params", _bicycle_ocp, ((4,), (2,))),
   ("bicycle_cont_6", bicycle_cont, (6,)),
   ("bicycle_cont_6_10", bicycle_cont, (6, 10)),
   ("bicycle_cont2_10_6", bicycle_cont2, (10, 6)),
@@ -115,12 +115,13 @@ args = [
 
 
 @pytest.mark.parametrize("name, fn, inshape", args)
-def test_run(name: str, fn: Callable[[Tensor], Tensor], inshape: tuple[int, ...]):
-  fn(Tensor.ones(inshape)).realize()
+def test_run(name: str, fn: Codegenable, inshape: OneOrMore[Shape]):
+  ins = (Tensor.ones(inshape),) if isinstance(inshape[0], int) else tuple(Tensor.ones(shape) for shape in inshape)
+  fn(*ins).realize()
 
 
 @pytest.mark.parametrize("name, fn, inshape", args)
-def test_aot(name: str, fn: Callable[[Tensor], Tensor], inshape: tuple[int, ...]):
+def test_aot(name: str, fn: Codegenable, inshape: OneOrMore[Shape]):
   prefix = os.path.join(os.path.dirname(__file__), "aot_out")
   os.makedirs(prefix, exist_ok=True)
   aot_src = aot(name, fn, inshape)

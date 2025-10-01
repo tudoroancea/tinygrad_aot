@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 from functools import cached_property
 from itertools import count
-from typing import Callable, cast
+from typing import Protocol, cast
 
 from tinygrad.device import Buffer, Device
 from tinygrad.engine.realize import get_program
@@ -10,7 +10,9 @@ from tinygrad.renderer import ProgramSpec
 from tinygrad.renderer.cstyle import CStyleLanguage
 from tinygrad.tensor import Tensor
 
-__all__ = ["aot"]
+from tinygrad_aot.utils import OneOrMore, Shape
+
+__all__ = ["aot", "Codegenable"]
 
 
 def render_kernels(schedule: list[ScheduleItem], var_vals: dict[str, int] | None = None) -> list[ProgramSpec]:
@@ -100,11 +102,16 @@ def render_schedule(
   return "\n".join(c_code)
 
 
-def aot(name: str, fn: Callable[[Tensor], Tensor], inshape: tuple[int, ...]):
+class Codegenable(Protocol):
+  def __call__(self, *args: Tensor) -> Tensor: ...
+
+
+def aot(name: str, fn: Codegenable, inshape: OneOrMore[Shape]):
   """Full AOT codegen pipeline"""
 
   # Get the output tensor to construct the base AST
-  out = fn(Tensor.empty(inshape))
+  ins = (Tensor.empty(inshape),) if isinstance(inshape[0], int) else tuple(Tensor.empty(shape) for shape in inshape)
+  out = fn(*ins)
 
   # Scheduling (breakdown AST into kernels)
   schedule, var_vals = out.schedule_with_vars()
