@@ -57,7 +57,7 @@ def render_schedule(
 ) -> str:
   """Create a single C source code with all the kernels and the assembled function."""
   c_code = []
-  c_code.append('#ifdef __cpplus\nextern "C" {\n#endif')
+  c_code.append('#ifdef __cplusplus\nextern "C" {\n#endif')
   c_code.append("#include <stdlib.h>")
   c_code.append("#include <stdint.h>")
 
@@ -97,7 +97,7 @@ def render_schedule(
 
   c_code.append("}")
 
-  c_code.append("#ifdef __cpplus\n}\n#endif")
+  c_code.append("#ifdef __cplusplus\n}\n#endif")
 
   return "\n".join(c_code)
 
