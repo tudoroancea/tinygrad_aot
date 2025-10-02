@@ -4,6 +4,7 @@ from functools import wraps
 from typing import Callable
 
 import pytest
+from icecream import ic
 from tinygrad import Tensor
 from tinygrad.helpers import prod
 from tinygrad.uop.ops import UOp
@@ -104,6 +105,10 @@ def eq_constraints(Z: Tensor) -> Tensor:
   return Tensor.cat(Z[:nx], interstage.transpose().flatten().contiguous())  # is this contiguous necessary?
 
 
+def multiple_outputs(x: Tensor) -> Tensor:
+  return x**2, 2 * x
+
+
 ##################################################################
 # Test AOT
 ##################################################################
@@ -129,6 +134,7 @@ args = [
   ("lti_rk2_10", lambda x, u: rk2(lti_cont, x, u, 0.01), ((2, 10), (1, 10))),
   ("lti_rk4", lambda x, u: rk4(lti_cont, x, u, 0.01), ((2,), (1,))),
   ("lti_rk4_10", lambda x, u: rk4(lti_cont, x, u, 0.01), ((2, 10), (1, 10))),
+  ("multiple_output", multiple_outputs, (2,)),
   # pytest.param("linear_sum_grad", linear_sum_grad, (1024,), marks=pytest.mark.skip),
 ]
 argids = [arg[0] for arg in args]
@@ -141,7 +147,12 @@ def test_run(name: str, fn: Codegenable, inshape: OneOrMore[Shape]):
     if isinstance(inshape[0], int)
     else tuple(Tensor.arange(prod(shape)).reshape(shape) for shape in inshape)
   )
-  print(fn(*ins).numpy())
+  outs = fn(*ins)
+  if isinstance(outs, Tensor):
+    print(outs.numpy())
+  else:
+    for out in outs:
+      print(out.numpy())
 
 
 @pytest.mark.parametrize("name, fn, inshape", args, ids=argids)

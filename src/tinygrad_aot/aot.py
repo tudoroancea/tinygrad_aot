@@ -147,7 +147,7 @@ def render_schedule(
 
 
 class Codegenable(Protocol):
-  def __call__(self, *args: Tensor) -> Tensor: ...
+  def __call__(self, *args: Tensor) -> OneOrMore[Tensor]: ...
 
 
 def aot(name: str, fn: Codegenable, inshape: OneOrMore[Shape]):
@@ -155,10 +155,10 @@ def aot(name: str, fn: Codegenable, inshape: OneOrMore[Shape]):
 
   # Get the output tensor to construct the base AST
   ins = (Tensor.empty(inshape),) if isinstance(inshape[0], int) else tuple(Tensor.empty(shape) for shape in inshape)
-  out = fn(*ins)
+  outs = fn(*ins)
 
   # Scheduling (breakdown AST into kernels)
-  schedule, var_vals = out.schedule_with_vars()
+  schedule, var_vals = outs.schedule_with_vars() if isinstance(outs, Tensor) else outs[0].schedule_with_vars(*outs[1:])
 
   # Render kernels
   rendered_kernels = render_kernels(schedule, var_vals)
