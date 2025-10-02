@@ -4,19 +4,41 @@ from itertools import count
 from typing import Protocol, cast
 
 from tinygrad.device import Buffer, Device
+from tinygrad.dtype import dtypes
 from tinygrad.engine.realize import get_program
 from tinygrad.engine.schedule import ScheduleItem
 from tinygrad.renderer import ProgramSpec
-from tinygrad.renderer.cstyle import CStyleLanguage
+from tinygrad.renderer.cstyle import ClangRenderer, CStyleLanguage
 from tinygrad.tensor import Tensor
+from tinygrad.uop import Ops
 
 from tinygrad_aot.utils import OneOrMore, Shape
 
 __all__ = ["aot", "Codegenable"]
 
 
+class CustomClangRenderer(ClangRenderer):
+  """
+  Custom renderer that renders certain ops as builtin clang functions instead of polynomial decompositions.
+  NOTE: adding these ops in code_for_op also automatically disables the decompositions because it marks them as 'supported'.
+  """
+
+  code_for_op = {
+    **({k: v for k, v in CStyleLanguage.code_for_op.items() if k not in [Ops.RECIP]}),
+    Ops.SIN: lambda x, dtype: f"__builtin_elementwise_sin({x})",
+    Ops.EXP2: lambda x, dtype: f"__builtin_elementwise_exp2({x})",
+    Ops.LOG2: lambda x, dtype: f"__builtin_elementwise_log2({x})",
+    Ops.TRUNC: lambda x, dtype: f"__builtin_elementwise_trunc({x})",
+    Ops.SQRT: lambda x, dtype: f"__builtin_sqrt({x})" if dtype == dtypes.float64 else f"__builtin_sqrtf({x})",
+    Ops.TRUNC: lambda x, dtype: f"__builtin_trunc({x})" if dtype == dtypes.float64 else f"__builtin_truncf({x})",
+    Ops.FDIV: lambda a, b, dtype: f"({a}/{b})",
+  }
+
+
 def render_kernels(schedule: list[ScheduleItem], var_vals: dict[str, int] | None = None) -> list[ProgramSpec]:
-  return [get_program(si.ast, Device[si.bufs[0].device].renderer) for si in schedule]
+  renderer = CustomClangRenderer()
+  assert all(buf.device == renderer.device for si in schedule for buf in si.bufs)
+  return [get_program(si.ast, renderer) for si in schedule]
 
 
 @dataclass(frozen=True)
